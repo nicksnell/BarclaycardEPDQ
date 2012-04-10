@@ -56,7 +56,7 @@ class BarclaycardEPDQ(object):
 			'clientid':			self._epdq_client_id,
 			'password':			self._epdq_passphrase,
 			'chargetype':		self.charge_type,
-			'currency_code':	self.currency_code,
+			'currencycode':		self.currency_code,
 		})
 		
 		headers = {
