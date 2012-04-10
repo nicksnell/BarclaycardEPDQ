@@ -64,7 +64,7 @@ class BarclaycardEPDQ(object):
 			# Set additional headers for a POST
 			headers.update({
 				'Content-Type': 	'application/x-www-form-urlencoded',
-				'Content-Length':	len(data),
+				'Content-Length':	str(len(data)),
 				'Accept': 			'text/plain',
 			})
 			
