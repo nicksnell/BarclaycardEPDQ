@@ -12,7 +12,7 @@ setup(
 	author='Nick Snell',
 	author_email='nick@orpo.co.uk',
 	url='http://orpo.co.uk/',
-	download_url='http://orpo.co.uk/download/',
+	download_url='http://orpo.co.uk/code/',
 	license='License :: OSI Approved :: BSD License',
 	classifiers=[
 		'Environment :: Web Environment',
@@ -24,6 +24,6 @@ setup(
 	zip_safe=True,
 	packages=find_packages(exclude=['tests',]),
 	dependency_links = [],
-	install_requires=[],
+	install_requires=['requests'],
 	extras_require={}
 )

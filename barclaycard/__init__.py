@@ -1,18 +1,14 @@
 """Barclaycard ePDQ API interface"""
 
 # Nick Snell <nick@orpo.co.uk>
-# 7th November 2011
 
 import re
-import httplib
-import urllib
-import urlparse
+import requests
 
-__version__ = '1.0'
+__version__ = '1.1'
 
 # Defaults
-EPDQ_ENDPOINT = 'secure2.epdq.co.uk'
-EPDQ_URL = '/cgi-bin/CcxBarclaysEpdqEncTool.e'
+EPDQ_ENDPOINT = 'https://secure2.epdq.co.uk/cgi-bin/CcxBarclaysEpdqEncTool.e'
 
 # Currencies
 EPDQ_CURRENCY_GBP = '826'
@@ -26,7 +22,7 @@ class BarclaycardEPDQException(Exception): pass
 class BarclaycardEPDQ(object):
 	
 	def __init__(self, epdq_client_id, epdq_passphrase, charge_type=EPDQ_CHARGE_PREAUTH, 
-				currency_code=EPDQ_CURRENCY_GBP):
+				currency_code=EPDQ_CURRENCY_GBP, debug=False):
 		"""Initalise the API interface"""
 		
 		self._epdq_client_id = epdq_client_id
@@ -34,6 +30,8 @@ class BarclaycardEPDQ(object):
 		
 		self.currency_code = currency_code
 		self.charge_type = charge_type
+		
+		self._debug = debug
 		
 	def _call(self, url=EPDQ_URL, data=None, method='GET'):
 		"""Call the API and return the response"""
@@ -52,25 +50,15 @@ class BarclaycardEPDQ(object):
 			'currency_code':	self.currency_code,
 		})
 		
-		# Setup any arguments we are sending to 
-		data = urllib.urlencode(data)
-		
 		headers = {
 			'User-Agent': 'Python-Barclaycard-eDPQ/%s' % __version__
 		}
-		
-		# Setup a connection to ePDQ
-		connection = httplib.HTTPSConnection(EPDQ_ENDPOINT)
 		
 		response = None
 		
 		# Choose a method to contact the ePDQ
 		if method == 'GET':
-			# Build the GET URL
-			url = '%s?%s' % (url, data)
-			
-			connection.request(method, url, None, headers)
-			response = connection.getresponse()
+			response = requests.get(EPDQ_ENDPOINT, params=data, headers=headers)
 			
 		elif method == 'POST':
 			# Set additional headers for a POST
@@ -80,19 +68,14 @@ class BarclaycardEPDQ(object):
 				'Accept': 			'text/plain',
 			})
 			
-			connection.request(method, url, data, headers)
-			response = connection.getresponse()
+			response = requests.get(EPDQ_ENDPOINT, data=data, headers=headers)
 		
-		# Tidy up
-		connection.close()
+		if not response.status_code == 200:
+			raise BarclaycardEPDQException('Unable to process request: %s received' % 
+				response.status_code
+			)
 		
-		if not response.status == 200:
-			raise BarclaycardEPDQException('Unable to process request: %s %s' % (
-				response.status, 
-				response.reason
-			))
-		
-		return response
+		return response.text
 		
 	def get_epdq_key(self, total, order_ref=None):
 		"""Get a ePDQ encryption key"""
@@ -112,12 +95,17 @@ class BarclaycardEPDQ(object):
 		# Comes back in the format: <INPUT name=epdqdata type=hidden value="...some value...">
 		try:
 			# Attempt to use a regex to get the value we want - first match wins
-			value = re.findall('value="(.+?)"', response.read())[0]
+			value = re.findall('value="(.+?)"', response)[0]
 		except (TypeError, IndexError):
-			raise BarclaycardEPDQException('Unable to process request, invalid response from ePDQ!')
+			if self._debug:
+				err_msg = 'Invalid response from ePDQ - %s' % response
+			else:
+				err_msg = 'Unable to process request, invalid response from ePDQ!'
+			
+			raise BarclaycardEPDQException(err_msg)
 			
 		return value
 	
 	def get_epdq_url(self):
 		"""Return the full URL used for ePDQ transactions"""
-		return urlparse.urljoin('http://%s' % EPDQ_ENDPOINT, EPDQ_URL)
+		return EPDQ_ENDPOINT
