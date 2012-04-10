@@ -3,12 +3,15 @@
 # Nick Snell <nick@orpo.co.uk>
 
 import re
+import urlparse
 import requests
 
 __version__ = '1.1'
 
 # Defaults
-EPDQ_ENDPOINT = 'https://secure2.epdq.co.uk/cgi-bin/CcxBarclaysEpdqEncTool.e'
+EPDQ_ENDPOINT = 'https://secure2.epdq.co.uk'
+EDPQ_ENCODE_URL = '/cgi-bin/CcxBarclaysEpdqEncTool.e'
+EDPQ_URL = '/cgi-bin/CcxBarclaysEpdq.e'
 
 # Currencies
 EPDQ_CURRENCY_GBP = '826'
@@ -33,14 +36,20 @@ class BarclaycardEPDQ(object):
 		
 		self._debug = debug
 		
-	def _call(self, url=EPDQ_ENDPOINT, data=None, method='GET'):
+	def _call(self, url=None, data=None, method='GET'):
 		"""Call the API and return the response"""
+		
+		if url is None:
+			raise BarclaycardEPDQException('No URL specified to _call!')
 		
 		if method not in ('GET', 'POST'):
 			raise BarclaycardEPDQException('Unsupported method "%s" sent to ePDQ interface!' % method)
 		
 		if data is None:
 			raise BarclaycardEPDQException('No data sent to ePDQ interface!')
+		
+		# Build URL
+		url = urlparse.urljoin(EPDQ_ENDPOINT, url)
 		
 		# Add defaults
 		data.update({
@@ -89,7 +98,7 @@ class BarclaycardEPDQ(object):
 			data['oid'] = order_ref
 		
 		# Call the API
-		response = self._call(data=data, method='POST')
+		response = self._call(url=EDPQ_ENCODE_URL, data=data, method='POST')
 		
 		# Try to parse the response
 		# Comes back in the format: <INPUT name=epdqdata type=hidden value="...some value...">
@@ -108,4 +117,4 @@ class BarclaycardEPDQ(object):
 	
 	def get_epdq_url(self):
 		"""Return the full URL used for ePDQ transactions"""
-		return EPDQ_ENDPOINT
+		return urlparse.urljoin(EPDQ_ENDPOINT, EDPQ_URL)
