@@ -33,7 +33,7 @@ class BarclaycardEPDQ(object):
 		
 		self._debug = debug
 		
-	def _call(self, url=EPDQ_URL, data=None, method='GET'):
+	def _call(self, url=EPDQ_ENDPOINT, data=None, method='GET'):
 		"""Call the API and return the response"""
 		
 		if method not in ('GET', 'POST'):
@@ -58,7 +58,7 @@ class BarclaycardEPDQ(object):
 		
 		# Choose a method to contact the ePDQ
 		if method == 'GET':
-			response = requests.get(EPDQ_ENDPOINT, params=data, headers=headers)
+			response = requests.get(url, params=data, headers=headers)
 			
 		elif method == 'POST':
 			# Set additional headers for a POST
@@ -68,7 +68,7 @@ class BarclaycardEPDQ(object):
 				'Accept': 			'text/plain',
 			})
 			
-			response = requests.get(EPDQ_ENDPOINT, data=data, headers=headers)
+			response = requests.get(url, data=data, headers=headers)
 		
 		if not response.status_code == 200:
 			raise BarclaycardEPDQException('Unable to process request: %s received' % 
