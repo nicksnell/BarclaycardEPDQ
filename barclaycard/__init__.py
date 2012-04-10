@@ -68,7 +68,7 @@ class BarclaycardEPDQ(object):
 				'Accept': 			'text/plain',
 			})
 			
-			response = requests.get(url, data=data, headers=headers)
+			response = requests.post(url, data=data, headers=headers)
 		
 		if not response.status_code == 200:
 			raise BarclaycardEPDQException('Unable to process request: %s received' % 
